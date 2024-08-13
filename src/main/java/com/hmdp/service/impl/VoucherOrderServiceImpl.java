@@ -18,6 +18,7 @@ import com.hmdp.utils.SimpleRedisLock;
 import com.hmdp.utils.UserHolder;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.aop.framework.AopContext;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,7 +52,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     private StringRedisTemplate stringRedisTemplate;
     @Resource
     private RedissonClient redissonClient;
-    @Autowired
+    @Resource(name = "ConfirmRT")
     private RabbitTemplate rabbitTemplate;
     private static final DefaultRedisScript<Long> SECKILL_SCRIPT;
     static {
@@ -89,7 +90,8 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         voucherOrder.setId(oderId);
         voucherOrder.setUserId(userId);
         voucherOrder.setVoucherId(voucherId);
-        rabbitTemplate.convertAndSend("voucher.direct", "voucherOder", voucherOrder);
+        CorrelationData correlationData = new CorrelationData(String.valueOf(oderId));
+        rabbitTemplate.convertAndSend("voucher.direct", "voucherOder", voucherOrder, correlationData);
         //4.返回订单编号
         return Result.ok(oderId);
     }

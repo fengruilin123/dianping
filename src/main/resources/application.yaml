@@ -1,6 +1,8 @@
 server:
   port: 8081
 spring:
+  main:
+    allow-bean-definition-overriding: true
   application:
     name: hmdp
   datasource:
@@ -26,6 +28,7 @@ spring:
     virtual-host: /
     username: frl
     password: 200103
+    publisher-confirm-type: correlated
 mybatis-plus:
   type-aliases-package: com.hmdp.entity # 别名扫描包
 logging:
