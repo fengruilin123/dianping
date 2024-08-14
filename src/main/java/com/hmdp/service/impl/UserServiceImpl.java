@@ -6,6 +6,8 @@ import cn.hutool.core.lang.UUID;
 import cn.hutool.core.util.RandomUtil;
 import com.baomidou.mybatisplus.extension.conditions.query.QueryChainWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.hmdp.RateLimit.LimiterFactory;
+import com.hmdp.RateLimit.LoginRateLimiter;
 import com.hmdp.dto.LoginFormDTO;
 import com.hmdp.dto.Result;
 import com.hmdp.dto.UserDTO;
@@ -50,6 +52,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         if (RegexUtils.isPhoneInvalid(phone)) {
             //2.不符合返回错误信息
             return Result.fail("手机号无效!");
+        }
+        //2.判断是否被限流
+        LoginRateLimiter loginLimiter = LimiterFactory.getLoginLimiter(stringRedisTemplate);
+        if(!loginLimiter.isLoginAllowed(phone)){
+            return Result.fail("验证码发送频繁，请稍后再试！");
         }
         //3.生成验证码
         String code = RandomUtil.randomNumbers(6);
